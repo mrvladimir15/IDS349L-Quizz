@@ -72,14 +72,20 @@ class _QuizPageState extends State<QuizPage> {
                 //The user picked true.
                 bool correctAnswer = quiz.getQuestionAnswer;
                   if (correctAnswer == true) {
-                    print('Correcto');
-                    scoreKeeper.add(Icon(Icons.check, color: Colors.green,));
+                    if (!quiz.lastQuestion()) {
+                      scoreKeeper.add(Icon(Icons.check, color: Colors.green,));
+                      puntaje++;
+                    }
                   } else {
-                    print('Incorrecto');
-                    scoreKeeper.add(Icon(Icons.close, color: Colors.red,));
+                    if (!quiz.lastQuestion()) {
+                      scoreKeeper.add(Icon(Icons.close, color: Colors.red,));
+                    }
                   }
                   setState(() {
                     quiz.nextQuestion();
+                    if (quiz.lastQuestion()) {
+                      _showAlertDialog(puntaje.toString());
+                    }
                   });
               },
             ),
@@ -101,31 +107,68 @@ class _QuizPageState extends State<QuizPage> {
               onPressed: () {
                 bool correctAnswer = quiz.getQuestionAnswer;
                 //The user picked false.
-                if (correctAnswer == true) {
-                  print('Correcto');
-                  scoreKeeper.add(Icon(Icons.check, color: Colors.green,));
+                if (!correctAnswer) {
+                  if (!quiz.lastQuestion()) {
+                    scoreKeeper.add(Icon(Icons.check, color: Colors.green,));
+                    puntaje++;
+                  }
                 } else {
-                  print('Incorrecto');
-                  scoreKeeper.add(Icon(Icons.close, color: Colors.red,));
+                  if (!quiz.lastQuestion()) {
+                    scoreKeeper.add(Icon(Icons.close, color: Colors.green,));
+                  }
                 }
                 setState(() {
                   quiz.nextQuestion();
+                  if (quiz.lastQuestion()) {
+                    _showAlertDialog(puntaje.toString());
+                  }
                 });
               },
             ),
           ),
         ),
         //TODO: Add a Row here as your score keeper
-        Center(
-          child: Row(
-            children: [
-              Expanded(
-                  child: scoreKeeper[0]
-              ),
-            ],
-          ),
-        )
+
       ],
+    );
+  }
+
+  Future<void> _showAlertDialog(String correctAnswers) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Todas las preguntas respondidas",
+              style: TextStyle(fontSize: 30, color: Color.fromARGB(255, 4, 31, 154))),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  'Tuviste un puntaje de $correctAnswers sobre ${scoreKeeper.length} preguntas.',
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Restart',
+                  style: TextStyle(
+                    fontSize: 24,
+                  )),
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  scoreKeeper = [];
+                  quiz.restartQuestions();
+                  puntaje = 0;
+                });
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
